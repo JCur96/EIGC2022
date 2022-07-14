@@ -21,7 +21,7 @@ write.csv(twitterData, "../data/processedTwitterData.csv")
 # tweets <- read.csv("../data/processedTwitterData.csv")
 
 # take a random sample, to show proof of concept # 
-randomTweets <- tweets[sample(nrow(tweets), 100000, F), ]
+randomTweets <- tweets[sample(nrow(tweets), 60000, F), ]
 
 # write out data for use in other processes of hackathon # 
 # write.csv(randomTweets, "../data/randomProcessedTweets.csv")
@@ -71,3 +71,32 @@ reducedgraph <- litsearchr::reduce_graph(graph, cutoff_strength = cutoff[1])
 searchterms <- litsearchr::get_keywords(reducedgraph)
 head(searchterms)
 searchterms
+
+# save the search terms for future interrogation # 
+write.csv(searchterms, "../data/RSearchTerms.csv")
+# Now manual processing of claims into categories is required #
+# which can then be read back into R and used to generate a binary search # 
+# e.g. see below #
+# read grouped / classified terms back into R
+groupedTerms <- read.csv("../data/RSearchTermsClassified.csv")
+# gather related terms of interest
+climate <- groupedTerms$x[grep("climateChange", groupedTerms$classification)]
+hazard <- groupedTerms$x[grep("hazard", groupedTerms$classification)]
+globalWarming <- groupedTerms$x[grep("globalWarm", groupedTerms$classification)]
+crazy <- groupedTerms$x[grep("crazy", groupedTerms$classification)]
+abrotion <- groupedTerms$x[grep("abortion", groupedTerms$classification)]
+# aggregate all groups of relevant terms
+allIncludedterms <- list(climate, hazard, globalWarming, crazy, abrotion)
+# create a binary search
+climateBinarySearch <-
+  litsearchr::write_search(
+    groupdata = allIncludedterms,
+    languages = "English",
+    stemming = TRUE,
+    closure = "none",
+    exactphrase = TRUE,
+    writesearch = FALSE,
+    verbose = TRUE
+  )
+# write out to a text file
+write(climateBinarySearch, "../data/climateBinarySearch.txt")
